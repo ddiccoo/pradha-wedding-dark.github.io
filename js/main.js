@@ -2,11 +2,11 @@
   "use strict";
 
   // Call Styles From Server
-  var callStylesFromServer = function () {
-    var key =
+  let callStylesFromServer = function () {
+    let key =
       "U2FsdGVkX1/FpaHkV6gDnl+TdgxgpgZYxhzv+2TfSb5GsZ7zhyC4ix3RHlnXqRkCRl2701lGn9Kn/UYk+4iyF8K1gWNtKQ4cVJFv4Stnp0c=";
-    var bytes = CryptoJS.AES.decrypt(key, "generateCSS");
-    var generatedCSS = bytes.toString(CryptoJS.enc.Utf8);
+    let bytes = CryptoJS.AES.decrypt(key, "generateCSS");
+    let generatedCSS = bytes.toString(CryptoJS.enc.Utf8);
     $.ajax({
       url:
         generatedCSS +
@@ -19,8 +19,8 @@
     });
   };
 
-  var contentWayPoint = function () {
-    var i = 0;
+  let contentWayPoint = function () {
+    let i = 0;
     $(".animate-box").waypoint(
       function (direction) {
         if (
@@ -32,10 +32,10 @@
           $(this.element).addClass("item-animate");
           setTimeout(function () {
             $("body .animate-box.item-animate").each(function (k) {
-              var el = $(this);
+              let el = $(this);
               setTimeout(
                 function () {
-                  var effect = el.data("animate-effect");
+                  let effect = el.data("animate-effect");
                   if (effect === "fadeIn") {
                     el.addClass("fadeIn animated-fast");
                   } else if (effect === "fadeInLeft") {
@@ -59,7 +59,7 @@
     );
   };
 
-  var goToTop = function () {
+  let goToTop = function () {
     // goto top icon click
     $(".js-gotop").on("click", function (event) {
       event.preventDefault();
@@ -97,8 +97,8 @@
     });
 
     $(window).scroll(function () {
-      var $win = $(window);
-      var scrollPosition = $win.scrollTop();
+      let $win = $(window);
+      let scrollPosition = $win.scrollTop();
 
       if (scrollPosition > 200) {
         $(".js-top").addClass("active");
@@ -116,8 +116,8 @@
   };
 
   // Loading page
-  var loaderPage = function () {
-    var image = new Image();
+  let loaderPage = function () {
+    let image = new Image();
     if (window.matchMedia("(max-width: 641px)").matches)
       image.src = "images/bg-cover-mobile-modal.jpg";
     else image.src = "images/bg-cover-modal.jpg";
@@ -128,7 +128,7 @@
     };
   };
 
-  var counterWayPoint = function () {
+  let counterWayPoint = function () {
     if ($("#thd-counter").length > 0) {
       $("#thd-counter").waypoint(
         function (direction) {
@@ -143,7 +143,7 @@
   };
 
   // Parallax
-  var parallax = function () {
+  let parallax = function () {
     $(window).stellar();
   };
 
@@ -155,4 +155,20 @@
     counterWayPoint();
     loaderPage();
   });
+
+// fullScreen/exitFullScreen
+  window.fullScreen = function () {
+    let elem = document.documentElement;
+    
+    // Cek apakah mode fullscreen didukung oleh browser
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen().catch(err => {
+        console.log("Error attempting to enable fullscreen:", err.message);
+      });
+    } else if (elem.webkitRequestFullscreen) { /* Safari */
+      elem.webkitRequestFullscreen();
+    } else if (elem.msRequestFullscreen) { /* IE11 */
+      elem.msRequestFullscreen();
+    }
+  };
 })();

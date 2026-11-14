@@ -102,7 +102,130 @@ $(document).ready(function () {
   });
 });
 
+// Fungsi helper untuk mencegah XSS (Escape HTML)
+function escapeHtml(text) {
+  var map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 // ----- BUKU UCAPAN ----- //
+var currentOffset = 0;
+var isLoading = false; // Guard agar tidak terjadi double fetch
+
+function loadUcapan(isNew = false) {
+  if (isLoading) return; 
+  isLoading = true;
+
+  if (isNew) {
+    currentOffset = 0;
+    $("#daftar-ucapan").empty(); 
+  }
+
+  $.ajax({
+    type: "GET",
+    url: "ambil_ucapan.php",
+    data: { offset: currentOffset },
+    dataType: "json",
+    success: function (data) {
+      var html = "";
+      if (data && data.length > 0) {
+        data.forEach(function (item) {
+          var statusColor =
+            item.kehadiran === "Hadir"
+              ? "rgba(46, 204, 113, 0.4)"
+              : "rgba(255, 255, 255, 0.2)";
+          
+          // Mencegah XSS dengan escapeHtml dan memperbaiki layout pesan meluber dengan CSS word-wrap
+          html += `
+                    <div class="ucapan-card" style="word-wrap: break-word; overflow-wrap: break-word; word-break: break-word;">
+                        <div class="ucapan-header">
+                            <h4 class="ucapan-nama" style="word-break: break-word;">${escapeHtml(item.nama)}</h4>
+                            <span class="ucapan-status" style="background: ${statusColor}">${escapeHtml(item.kehadiran)}</span>
+                        </div>
+                        <p class="ucapan-pesan" style="white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;">"${escapeHtml(item.pesan)}"</p>
+                        <span class="ucapan-waktu"><i class="icon-clock"></i> ${escapeHtml(item.created_at)}</span>
+                    </div>`;
+        });
+
+        if (isNew) {
+          $("#daftar-ucapan").html(html); 
+        } else {
+          $("#daftar-ucapan").append(html); 
+        }
+
+        currentOffset += data.length;
+        if (data.length === 5) {
+          $("#btn-load-more").show();
+        } else {
+          $("#btn-load-more").hide();
+        }
+      } else {
+        if (currentOffset === 0) {
+          $("#daftar-ucapan").html(
+            '<p class="text-center" style="color: #888;">Belum ada doa tertulis.</p>',
+          );
+        }
+        $("#btn-load-more").hide();
+      }
+    },
+    complete: function () {
+      isLoading = false; 
+    },
+  });
+}
+
+$(document).ready(function () {
+  // Gunakan .off() sebelum .on() untuk memastikan handler tidak terpasang dua kali
+  $("#form-ucapan")
+    .off("submit")
+    .on("submit", function (e) {
+      e.preventDefault();
+
+      var $btn = $(this).find('button[type="submit"]');
+      $btn.prop("disabled", true).text("Mengirim..."); // Disable tombol agar tidak klik 2x
+
+      var formData = {
+        nama: $("#nama").val(),
+        kehadiran: $("#kehadiran").val(),
+        pesan: $("#pesan").val(),
+      };
+
+      $.ajax({
+        type: "POST",
+        url: "simpan_ucapan.php",
+        data: formData,
+        dataType: "json",
+        success: function (response) {
+          if (response.status === "success") {
+            alert("Ucapan Berhasil Dikirim!");
+            $("#form-ucapan")[0].reset();
+            loadUcapan(true); // Reset daftar
+          } else {
+            alert("Gagal mengirim: " + response.message);
+          }
+        },
+        error: function () {
+          alert("Terjadi kesalahan sistem.");
+        },
+        complete: function () {
+          $btn.prop("disabled", false).text("Kirim Ucapan");
+        },
+      });
+    });
+
+  // Inisialisasi awal
+  loadUcapan();
+
+  $("#btn-load-more").on("click", function () {
+    loadUcapan();
+  });
+});
 // ----- BUKU UCAPAN END ----- //
 
 // ----- INVITATION RECEIVER ----- //
